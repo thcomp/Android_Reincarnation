@@ -32,4 +32,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="start testB All" />
+
+    <Button
+        android:id="@+id/btnStartTestC"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="start testC" />
+
 </LinearLayout>

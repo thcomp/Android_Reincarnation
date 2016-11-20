@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnStartTestA_All).setOnClickListener(mBtnClickListener);
         findViewById(R.id.btnStartTestB).setOnClickListener(mBtnClickListener);
         findViewById(R.id.btnStartTestB_All).setOnClickListener(mBtnClickListener);
+        findViewById(R.id.btnStartTestC).setOnClickListener(mBtnClickListener);
     }
 
     private void startTestA(){
@@ -29,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         RootA rootANew = new RootA();
         ReincarnationHelper.restore(rootANew, outState);
 
-        if(rootA.equals(rootANew)){
+        if(rootA.equalsOnlyPublic(rootANew)){
             Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
@@ -61,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         RootB rootBNew = new RootB();
         ReincarnationHelper.restore(rootBNew, outState);
 
-        if(rootB.equals(rootBNew)){
+        if(rootB.equalsOnlyPublic(rootBNew)){
             Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
@@ -84,6 +85,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void startTestC(){
+        Bundle outState = new Bundle();
+        RootC rootC = new RootC();
+        rootC.initialize();
+        ReincarnationHelper.save(rootC, outState);
+
+        RootB rootCNew = new RootC();
+        ReincarnationHelper.restore(rootCNew, outState);
+
+        if(rootC.equalsOnlyPublic(rootCNew)){
+            Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private View.OnClickListener mBtnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -95,6 +112,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.btnStartTestB:
                     startTestB();
+                    break;
+                case R.id.btnStartTestC:
+                    startTestC();
                     break;
                 case R.id.btnStartTestA_All:
                     startTestA_All();

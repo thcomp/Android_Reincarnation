@@ -9,11 +9,11 @@ import jp.co.thcomp.reincarnation.ReincarnationHelper;
 @ReincarnationHelper.TargetClass
 public class SubC {
     public String publicA;
-    private String privateA;
+//    private String privateA;
 
     public void initialize(){
         publicA = "10";
-        privateA = "10";
+//        privateA = "10";
     }
 
     @Override
@@ -25,8 +25,8 @@ public class SubC {
 
         if (publicA != null ? !publicA.equals(subC.publicA) : subC.publicA != null)
             return false;
-        return privateA != null ? privateA.equals(subC.privateA) : subC.privateA == null;
-
+//        return privateA != null ? privateA.equals(subC.privateA) : subC.privateA == null;
+        return true;
     }
 
     public boolean equalsOnlyPublic(Object o) {

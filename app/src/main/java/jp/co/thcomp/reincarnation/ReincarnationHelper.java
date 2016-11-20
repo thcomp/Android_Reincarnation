@@ -85,9 +85,9 @@ public class ReincarnationHelper {
         param.state.putString(param.parentConcatName + CLASS_NAME, param.targetInstance.getClass().getName());
 
         Field[] fields = null;
-        if(param.onlyPublic){
+        if (param.onlyPublic) {
             fields = param.targetInstance.getClass().getFields();
-        }else{
+        } else {
             fields = param.targetInstance.getClass().getDeclaredFields();
         }
 
@@ -136,10 +136,13 @@ public class ReincarnationHelper {
                                     param.state.putBundle(baseName, nextBundle);
                                     nextParam.state = nextBundle;
 
-                                    for (Object listItem : (List) fieldObject) {
+                                    for (Object listItem : (Object[]) fieldObject) {
                                         nextParam.parentConcatName = baseName + VALUE_NAME + index;
                                         nextParam.targetInstance = listItem;
-                                        saveLocal(nextParam);
+                                        nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, listItem.getClass().getName());
+                                        if (!savePrimitiveClassData(nextParam, listItem)) {
+                                            saveLocal(nextParam);
+                                        }
                                         index++;
                                     }
                                 }
@@ -154,7 +157,10 @@ public class ReincarnationHelper {
                                     for (Object listItem : (List) fieldObject) {
                                         nextParam.parentConcatName = baseName + VALUE_NAME + index;
                                         nextParam.targetInstance = listItem;
-                                        saveLocal(nextParam);
+                                        nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, listItem.getClass().getName());
+                                        if (!savePrimitiveClassData(nextParam, listItem)) {
+                                            saveLocal(nextParam);
+                                        }
                                         index++;
                                     }
                                 }
@@ -169,11 +175,17 @@ public class ReincarnationHelper {
                                     for (Object mapEntry : ((Map) fieldObject).entrySet()) {
                                         nextParam.parentConcatName = baseName + KEY_NAME + index;
                                         nextParam.targetInstance = ((Map.Entry) mapEntry).getKey();
-                                        saveLocal(nextParam);
+                                        nextParam.state.putString(baseName + KEY_NAME + CLASS_NAME + index, nextParam.targetInstance.getClass().getName());
+                                        if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
+                                            saveLocal(nextParam);
+                                        }
 
                                         nextParam.parentConcatName = baseName + VALUE_NAME + index;
                                         nextParam.targetInstance = ((Map.Entry) mapEntry).getValue();
-                                        saveLocal(nextParam);
+                                        nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, nextParam.targetInstance.getClass().getName());
+                                        if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
+                                            saveLocal(nextParam);
+                                        }
                                         index++;
                                     }
                                 }
@@ -202,10 +214,16 @@ public class ReincarnationHelper {
     }
 
     private static void restoreLocal(Parameter param) {
-        Field[] fields = param.targetInstance.getClass().getDeclaredFields();
+        Field[] fields = null;
+        if (param.onlyPublic) {
+            fields = param.targetInstance.getClass().getFields();
+        } else {
+            fields = param.targetInstance.getClass().getDeclaredFields();
+        }
 
         if (fields != null && fields.length > 0) {
             for (Field field : fields) {
+                boolean fieldInObject = field.getDeclaringClass().getName().equals(Object.class.getName());
                 boolean targetField = param.haveTargetClassAnnotation;
 
                 if (targetField) {
@@ -216,7 +234,7 @@ public class ReincarnationHelper {
                     targetField = containAnnotation(field.getAnnotations(), TargetField.class);
                 }
 
-                if (targetField) {
+                if (targetField && !fieldInObject) {
                     boolean primitiveType = restorePrimitiveData(param, field);
 
                     if (!primitiveType) {
@@ -229,8 +247,7 @@ public class ReincarnationHelper {
                             if (fieldObject == null) {
                                 if (dataCount == NONE_ARRAY_FIELD_COUNT) {
                                     // 配列ではないデータを保存
-                                    Constructor fieldConstructor = field.getType().getConstructor();
-                                    fieldObject = fieldConstructor.newInstance();
+                                    fieldObject = createNewInstance(param.state.get(baseName), field.getType().getName());
                                 } else {
                                     // 配列データを保存
                                     fieldObject = new Object[dataCount];
@@ -257,15 +274,15 @@ public class ReincarnationHelper {
                                             for (int i = 0; i < dataCount; i++) {
                                                 nextParam.parentConcatName = baseName + VALUE_NAME + i;
 
-                                                String arrayItemClassName = nextParam.state.getString(nextParam.parentConcatName + CLASS_NAME, null);
+                                                String arrayItemClassName = nextParam.state.getString(baseName + VALUE_NAME + CLASS_NAME + i, null);
                                                 if (arrayItemClassName != null) {
-                                                    Class arrayItemClass = Class.forName(arrayItemClassName);
-                                                    Constructor arrayItemConstructor = arrayItemClass.getConstructor();
-                                                    Object arrayItem = arrayItemConstructor.newInstance();
+                                                    Object arrayItem = createNewInstance(nextParam.state.get(nextParam.parentConcatName), arrayItemClassName);
                                                     ((Object[]) fieldObject)[i] = arrayItem;
 
-                                                    nextParam.targetInstance = arrayItem;
-                                                    restoreLocal(nextParam);
+                                                    if (!isPrimitiveClassData(arrayItem)) {
+                                                        nextParam.targetInstance = arrayItem;
+                                                        restoreLocal(nextParam);
+                                                    }
                                                 }
                                             }
                                         }
@@ -278,15 +295,15 @@ public class ReincarnationHelper {
                                             for (int i = 0; i < dataCount; i++) {
                                                 nextParam.parentConcatName = baseName + VALUE_NAME + i;
 
-                                                String arrayItemClassName = nextParam.state.getString(nextParam.parentConcatName + CLASS_NAME, null);
+                                                String arrayItemClassName = nextParam.state.getString(baseName + VALUE_NAME + CLASS_NAME + i, null);
                                                 if (arrayItemClassName != null) {
-                                                    Class arrayItemClass = Class.forName(arrayItemClassName);
-                                                    Constructor arrayItemConstructor = arrayItemClass.getConstructor();
-                                                    Object arrayItem = arrayItemConstructor.newInstance();
+                                                    Object arrayItem = createNewInstance(nextParam.state.get(nextParam.parentConcatName), arrayItemClassName);
                                                     ((List) fieldObject).add(arrayItem);
 
-                                                    nextParam.targetInstance = arrayItem;
-                                                    restoreLocal(nextParam);
+                                                    if (!isPrimitiveClassData(arrayItem)) {
+                                                        nextParam.targetInstance = arrayItem;
+                                                        restoreLocal(nextParam);
+                                                    }
                                                 }
                                             }
                                         }
@@ -303,19 +320,15 @@ public class ReincarnationHelper {
                                                 String keyName = baseName + KEY_NAME + i;
                                                 String valueName = baseName + VALUE_NAME + i;
 
-                                                String keyArrayItemClassName = nextParam.state.getString(keyName + CLASS_NAME, null);
+                                                String keyArrayItemClassName = nextParam.state.getString(baseName + KEY_NAME + CLASS_NAME + i, null);
                                                 if (keyArrayItemClassName != null) {
-                                                    Class arrayItemClass = Class.forName(keyArrayItemClassName);
-                                                    Constructor arrayItemConstructor = arrayItemClass.getConstructor();
-                                                    Object arrayItem = arrayItemConstructor.newInstance();
+                                                    Object arrayItem = createNewInstance(nextParam.state.get(keyName), keyArrayItemClassName);
                                                     keyObject = arrayItem;
                                                 }
 
-                                                String valueArrayItemClassName = nextParam.state.getString(valueName + CLASS_NAME, null);
+                                                String valueArrayItemClassName = nextParam.state.getString(baseName + VALUE_NAME + CLASS_NAME + i, null);
                                                 if (valueArrayItemClassName != null) {
-                                                    Class arrayItemClass = Class.forName(valueArrayItemClassName);
-                                                    Constructor arrayItemConstructor = arrayItemClass.getConstructor();
-                                                    Object arrayItem = arrayItemConstructor.newInstance();
+                                                    Object arrayItem = createNewInstance(nextParam.state.get(valueName), valueArrayItemClassName);
                                                     valueObject = arrayItem;
                                                 }
 
@@ -325,17 +338,19 @@ public class ReincarnationHelper {
                                                 }
 
                                                 // キー向けのインスタンスの展開
-                                                nextParam.targetInstance = keyObject;
-                                                nextParam.parentConcatName = keyName;
-                                                try {
-                                                    restoreLocal(nextParam);
-                                                } catch (Exception e) {
-                                                    // 展開に失敗したので、削除
-                                                    ((Map) fieldObject).remove(keyObject);
-                                                    valueObject = null;
+                                                if (!isPrimitiveClassData(keyObject)) {
+                                                    nextParam.targetInstance = keyObject;
+                                                    nextParam.parentConcatName = keyName;
+                                                    try {
+                                                        restoreLocal(nextParam);
+                                                    } catch (Exception e) {
+                                                        // 展開に失敗したので、削除
+                                                        ((Map) fieldObject).remove(keyObject);
+                                                        valueObject = null;
+                                                    }
                                                 }
 
-                                                if (valueObject != null) {
+                                                if (valueObject != null && !isPrimitiveClassData(valueObject)) {
                                                     nextParam.targetInstance = valueObject;
                                                     nextParam.parentConcatName = valueName;
                                                     try {
@@ -493,6 +508,64 @@ public class ReincarnationHelper {
         return primitiveType;
     }
 
+    private static boolean savePrimitiveClassData(Parameter param, Object value) {
+        boolean primitiveClassType = false;
+        String fieldTypeName = value.getClass().getName();
+
+        if (fieldTypeName.equals(Byte.class.getName())) {
+            primitiveClassType = true;
+            param.state.putByte(param.parentConcatName, (Byte) value);
+        } else if (fieldTypeName.equals(Character.class.getName())) {
+            primitiveClassType = true;
+            param.state.putChar(param.parentConcatName, (Character) value);
+        } else if (fieldTypeName.equals(Short.class.getName())) {
+            primitiveClassType = true;
+            param.state.putShort(param.parentConcatName, (Short) value);
+        } else if (fieldTypeName.equals(Integer.class.getName())) {
+            primitiveClassType = true;
+            param.state.putInt(param.parentConcatName, (Integer) value);
+        } else if (fieldTypeName.equals(Long.class.getName())) {
+            primitiveClassType = true;
+            param.state.putLong(param.parentConcatName, (Long) value);
+        } else if (fieldTypeName.equals(Float.class.getName())) {
+            primitiveClassType = true;
+            param.state.putFloat(param.parentConcatName, (Float) value);
+        } else if (fieldTypeName.equals(Double.class.getName())) {
+            primitiveClassType = true;
+            param.state.putDouble(param.parentConcatName, (Double) value);
+        } else if (fieldTypeName.equals(String.class.getName())) {
+            primitiveClassType = true;
+            param.state.putString(param.parentConcatName, (String) value);
+        }
+
+        return primitiveClassType;
+    }
+
+    private static boolean isPrimitiveClassData(Object value) {
+        boolean primitiveClassType = false;
+        String fieldTypeName = value.getClass().getName();
+
+        if (fieldTypeName.equals(Byte.class.getName())) {
+            primitiveClassType = true;
+        } else if (fieldTypeName.equals(Character.class.getName())) {
+            primitiveClassType = true;
+        } else if (fieldTypeName.equals(Short.class.getName())) {
+            primitiveClassType = true;
+        } else if (fieldTypeName.equals(Integer.class.getName())) {
+            primitiveClassType = true;
+        } else if (fieldTypeName.equals(Long.class.getName())) {
+            primitiveClassType = true;
+        } else if (fieldTypeName.equals(Float.class.getName())) {
+            primitiveClassType = true;
+        } else if (fieldTypeName.equals(Double.class.getName())) {
+            primitiveClassType = true;
+        } else if (fieldTypeName.equals(String.class.getName())) {
+            primitiveClassType = true;
+        }
+
+        return primitiveClassType;
+    }
+
     private static boolean restorePrimitiveData(Parameter param, Field field) {
         boolean primitiveType = false;
 
@@ -505,7 +578,7 @@ public class ReincarnationHelper {
                 field.setByte(param.targetInstance, param.state.getByte(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(byte[].class.getName())) {
                 primitiveType = true;
-                field.set(param.targetInstance, param.state.getChar(createAbsoluteName(param.parentConcatName, field)));
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(char.class.getName())) {
                 primitiveType = true;
                 field.setChar(param.targetInstance, param.state.getChar(createAbsoluteName(param.parentConcatName, field)));
@@ -793,6 +866,34 @@ public class ReincarnationHelper {
                 ret = true;
                 break;
             }
+        }
+
+        return ret;
+    }
+
+    public static Object createNewInstance(Object valueObject, String className) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
+        Object ret = null;
+
+        Class itemClass = Class.forName(className);
+        if (itemClass.equals(Byte.class)) {
+            ret = Byte.valueOf((byte) valueObject);
+        } else if (itemClass.equals(Character.class)) {
+            ret = Character.valueOf((char) valueObject);
+        } else if (itemClass.equals(Short.class)) {
+            ret = Short.valueOf((short) valueObject);
+        } else if (itemClass.equals(Integer.class)) {
+            ret = Integer.valueOf((int) valueObject);
+        } else if (itemClass.equals(Long.class)) {
+            ret = Long.valueOf((long) valueObject);
+        } else if (itemClass.equals(Float.class)) {
+            ret = Float.valueOf((float) valueObject);
+        } else if (itemClass.equals(Double.class)) {
+            ret = Double.valueOf((double) valueObject);
+        } else if (itemClass.equals(String.class)) {
+            ret = valueObject;
+        } else {
+            Constructor arrayItemConstructor = itemClass.getConstructor();
+            ret = arrayItemConstructor.newInstance();
         }
 
         return ret;
