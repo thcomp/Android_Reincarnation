@@ -1,13 +1,17 @@
 package jp.co.thcomp.test;
 
+import android.content.Context;
+
 import jp.co.thcomp.reincarnation.ReincarnationHelper;
 
 /**
  * Created by H_Tatsuguchi on 2016/11/20.
  */
 
-@ReincarnationHelper.TargetClass
 public class RootA {
+    @ReincarnationHelper.UntargetField
+    Context context;
+
     public byte publicA = 0;
     private byte privateA = 0;
     public char publicB = 0;

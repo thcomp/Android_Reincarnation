@@ -9,48 +9,85 @@ import jp.co.thcomp.reincarnation.ReincarnationHelper;
  * Created by H_Tatsuguchi on 2016/11/20.
  */
 
-@ReincarnationHelper.TargetClass
 public class RootB extends RootA {
-    public ArrayList<Byte> publicListA = new ArrayList<Byte>();
-    private ArrayList<Byte> privateListA = new ArrayList<Byte>();
-    public ArrayList<Character> publicListB = new ArrayList<Character>();
-    private ArrayList<Character> privateListB = new ArrayList<Character>();
-    public ArrayList<Short> publicListC = new ArrayList<Short>();
-    private ArrayList<Short> privateListC = new ArrayList<Short>();
-    public ArrayList<Integer> publicListD = new ArrayList<Integer>();
-    private ArrayList<Integer> privateListD = new ArrayList<Integer>();
-    public ArrayList<Long> publicListE = new ArrayList<Long>();
-    private ArrayList<Long> privateListE = new ArrayList<Long>();
-    public ArrayList<Float> publicListF = new ArrayList<Float>();
-    private ArrayList<Float> privateListF = new ArrayList<Float>();
-    public ArrayList<Double> publicListG = new ArrayList<Double>();
-    private ArrayList<Double> privateListG = new ArrayList<Double>();
-    public ArrayList<String> publicListH = new ArrayList<String>();
-    private ArrayList<String> privateListH = new ArrayList<String>();
-    public ArrayList<SubA> publicListI = new ArrayList<SubA>();
-    private ArrayList<SubA> privateListI = new ArrayList<SubA>();
+    public ArrayList<Byte> publicListA = null;
+    private ArrayList<Byte> privateListA = null;
+    public ArrayList<Character> publicListB = null;
+    private ArrayList<Character> privateListB = null;
+    public ArrayList<Short> publicListC = null;
+    private ArrayList<Short> privateListC = null;
+    public ArrayList<Integer> publicListD = null;
+    private ArrayList<Integer> privateListD = null;
+    public ArrayList<Long> publicListE = null;
+    private ArrayList<Long> privateListE = null;
+    public ArrayList<Float> publicListF = null;
+    private ArrayList<Float> privateListF = null;
+    public ArrayList<Double> publicListG = null;
+    private ArrayList<Double> privateListG = null;
+    public ArrayList<String> publicListH = null;
+    private ArrayList<String> privateListH = null;
+    public ArrayList<SubA> publicListI = null;
+    private ArrayList<SubA> privateListI = null;
 
-    public HashMap<Byte, Byte> publicMapA = new HashMap<Byte, Byte>();
-    private HashMap<Byte, Byte> privateMapA = new HashMap<Byte, Byte>();
-    public HashMap<Character, Character> publicMapB = new HashMap<Character, Character>();
-    private HashMap<Character, Character> privateMapB = new HashMap<Character, Character>();
-    public HashMap<Short, Short> publicMapC = new HashMap<Short, Short>();
-    private HashMap<Short, Short> privateMapC = new HashMap<Short, Short>();
-    public HashMap<Integer, Integer> publicMapD = new HashMap<Integer, Integer>();
-    private HashMap<Integer, Integer> privateMapD = new HashMap<Integer, Integer>();
-    public HashMap<Long, Long> publicMapE = new HashMap<Long, Long>();
-    private HashMap<Long, Long> privateMapE = new HashMap<Long, Long>();
-    public HashMap<Float, Float> publicMapF = new HashMap<Float, Float>();
-    private HashMap<Float, Float> privateMapF = new HashMap<Float, Float>();
-    public HashMap<Double, Double> publicMapG = new HashMap<Double, Double>();
-    private HashMap<Double, Double> privateMapG = new HashMap<Double, Double>();
-    public HashMap<String, String> publicMapH = new HashMap<String, String>();
-    private HashMap<String, String> privateMapH = new HashMap<String, String>();
-    public HashMap<SubA, SubC> publicMapI = new HashMap<SubA, SubC>();
-    private HashMap<SubA, SubC> privateMapI = new HashMap<SubA, SubC>();
+    public HashMap<Byte, Byte> publicMapA = null;
+    private HashMap<Byte, Byte> privateMapA = null;
+    public HashMap<Character, Character> publicMapB = null;
+    private HashMap<Character, Character> privateMapB = null;
+    public HashMap<Short, Short> publicMapC = null;
+    private HashMap<Short, Short> privateMapC = null;
+    public HashMap<Integer, Integer> publicMapD = null;
+    private HashMap<Integer, Integer> privateMapD = null;
+    public HashMap<Long, Long> publicMapE = null;
+    private HashMap<Long, Long> privateMapE = null;
+    public HashMap<Float, Float> publicMapF = null;
+    private HashMap<Float, Float> privateMapF = null;
+    public HashMap<Double, Double> publicMapG = null;
+    private HashMap<Double, Double> privateMapG = null;
+    public HashMap<String, String> publicMapH = null;
+    private HashMap<String, String> privateMapH = null;
+    public HashMap<SubA, SubC> publicMapI = null;
+    private HashMap<SubA, SubC> privateMapI = null;
 
     public void initialize() {
         super.initialize();
+
+        publicListA = new ArrayList<Byte>();
+        privateListA = new ArrayList<Byte>();
+        publicListB = new ArrayList<Character>();
+        privateListB = new ArrayList<Character>();
+        publicListC = new ArrayList<Short>();
+        privateListC = new ArrayList<Short>();
+        publicListD = new ArrayList<Integer>();
+        privateListD = new ArrayList<Integer>();
+        publicListE = new ArrayList<Long>();
+        privateListE = new ArrayList<Long>();
+        publicListF = new ArrayList<Float>();
+        privateListF = new ArrayList<Float>();
+        publicListG = new ArrayList<Double>();
+        privateListG = new ArrayList<Double>();
+        publicListH = new ArrayList<String>();
+        privateListH = new ArrayList<String>();
+        publicListI = new ArrayList<SubA>();
+        privateListI = new ArrayList<SubA>();
+
+        publicMapA = new HashMap<Byte, Byte>();
+        privateMapA = new HashMap<Byte, Byte>();
+        publicMapB = new HashMap<Character, Character>();
+        privateMapB = new HashMap<Character, Character>();
+        publicMapC = new HashMap<Short, Short>();
+        privateMapC = new HashMap<Short, Short>();
+        publicMapD = new HashMap<Integer, Integer>();
+        privateMapD = new HashMap<Integer, Integer>();
+        publicMapE = new HashMap<Long, Long>();
+        privateMapE = new HashMap<Long, Long>();
+        publicMapF = new HashMap<Float, Float>();
+        privateMapF = new HashMap<Float, Float>();
+        publicMapG = new HashMap<Double, Double>();
+        privateMapG = new HashMap<Double, Double>();
+        publicMapH = new HashMap<String, String>();
+        privateMapH = new HashMap<String, String>();
+        publicMapI = new HashMap<SubA, SubC>();
+        privateMapI = new HashMap<SubA, SubC>();
 
         for (byte i = 0; i < 10; i++) {
             publicListA.add(i);

@@ -11,8 +11,11 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.security.cert.CollectionCertStoreParameters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by H_Tatsuguchi on 2016/11/20.
@@ -25,12 +28,6 @@ public class ReincarnationHelper {
     private static final String KEY_NAME = ABSOLUTE_NAME_SEPARATER + "+Key+";
     private static final String VALUE_NAME = ABSOLUTE_NAME_SEPARATER + "+Value+";
     private static final String CLASS_NAME = ABSOLUTE_NAME_SEPARATER + "+Class+";
-
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.TYPE)
-    public @interface TargetClass {
-
-    }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD})
@@ -48,7 +45,7 @@ public class ReincarnationHelper {
         Parameter param = new Parameter();
         param.targetInstance = instance;
         param.state = outBundle;
-        param.haveTargetClassAnnotation = hasTargetClassAnnotation(instance);
+        param.haveTargetClassAnnotation = false;
         param.onlyPublic = true;
         saveLocal(param);
     }
@@ -57,7 +54,7 @@ public class ReincarnationHelper {
         Parameter param = new Parameter();
         param.targetInstance = instance;
         param.state = savedInstance;
-        param.haveTargetClassAnnotation = hasTargetClassAnnotation(instance);
+        param.haveTargetClassAnnotation = false;
         param.onlyPublic = true;
         restoreLocal(param);
     }
@@ -66,7 +63,7 @@ public class ReincarnationHelper {
         Parameter param = new Parameter();
         param.targetInstance = instance;
         param.state = outBundle;
-        param.haveTargetClassAnnotation = hasTargetClassAnnotation(instance);
+        param.haveTargetClassAnnotation = false;
         param.onlyPublic = false;
         saveLocal(param);
     }
@@ -75,7 +72,7 @@ public class ReincarnationHelper {
         Parameter param = new Parameter();
         param.targetInstance = instance;
         param.state = savedInstance;
-        param.haveTargetClassAnnotation = hasTargetClassAnnotation(instance);
+        param.haveTargetClassAnnotation = false;
         param.onlyPublic = false;
         restoreLocal(param);
     }
@@ -88,7 +85,9 @@ public class ReincarnationHelper {
         if (param.onlyPublic) {
             fields = param.targetInstance.getClass().getFields();
         } else {
-            fields = param.targetInstance.getClass().getDeclaredFields();
+            ArrayList<Field> fieldList = new ArrayList<Field>();
+            getAllFields(param.targetInstance.getClass(), fieldList);
+            fields = fieldList.toArray(new Field[fieldList.size()]);
         }
 
         if (fields != null && fields.length > 0) {
@@ -111,6 +110,7 @@ public class ReincarnationHelper {
                             field.setAccessible(true);
                             Object fieldObject = field.get(param.targetInstance);
                             Parameter nextParam = new Parameter(param);
+                            nextParam.haveTargetClassAnnotation = true;
 
                             String baseName = createAbsoluteName(param.parentConcatName, field);
                             int dataCount = getDataCount(fieldObject);
@@ -218,7 +218,9 @@ public class ReincarnationHelper {
         if (param.onlyPublic) {
             fields = param.targetInstance.getClass().getFields();
         } else {
-            fields = param.targetInstance.getClass().getDeclaredFields();
+            ArrayList<Field> fieldList = new ArrayList<Field>();
+            getAllFields(param.targetInstance.getClass(), fieldList);
+            fields = fieldList.toArray(new Field[fieldList.size()]);
         }
 
         if (fields != null && fields.length > 0) {
@@ -256,6 +258,7 @@ public class ReincarnationHelper {
 
                             if (fieldObject != null) {
                                 Parameter nextParam = new Parameter(param);
+                                nextParam.haveTargetClassAnnotation = true;
 
                                 if (fieldObject instanceof String) {
                                     field.set(param.targetInstance, param.state.getString(baseName));
@@ -396,7 +399,7 @@ public class ReincarnationHelper {
 
         if (annotationArray != null && annotationArray.length > 0) {
             for (Annotation annotation : annotationArray) {
-                if (annotation.equals(targetAnnotationClass)) {
+                if (annotation.annotationType().equals(targetAnnotationClass)) {
                     ret = true;
                     break;
                 }
@@ -854,22 +857,6 @@ public class ReincarnationHelper {
         return ret;
     }
 
-    private static boolean hasTargetClassAnnotation(Object instance) {
-        boolean ret = false;
-
-        for (Annotation annotation : instance.getClass().getAnnotations()) {
-            String nameA = TargetClass.class.getName();
-            String nameB = annotation.annotationType().getName();
-
-            if (TargetClass.class.getName().equals(annotation.annotationType().getName())) {
-                ret = true;
-                break;
-            }
-        }
-
-        return ret;
-    }
-
     public static Object createNewInstance(Object valueObject, String className) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
         Object ret = null;
 
@@ -900,9 +887,7 @@ public class ReincarnationHelper {
 
     private static Object createNewCollectionInstance(Field field, int dataCount) {
         Object ret = null;
-        Class fieldTypeClass = null;
-
-        fieldTypeClass = field.getType().getClass();
+        Class fieldTypeClass = field.getType();
         try {
             Constructor fieldClassConstructor = fieldTypeClass.getConstructor();
             ret = fieldClassConstructor.newInstance();
@@ -918,6 +903,21 @@ public class ReincarnationHelper {
         }
 
         return ret;
+    }
+
+    private static void getAllFields(Class targetClass, List<Field> fieldList){
+        Field[] fields = targetClass.getDeclaredFields();
+
+        if(fields != null && fields.length > 0){
+            for(Field field : fields){
+                fieldList.add(field);
+            }
+        }
+
+        Class superClass = targetClass.getSuperclass();
+        if(!superClass.equals(Object.class)){
+            getAllFields(superClass, fieldList);
+        }
     }
 
     private static class Parameter {

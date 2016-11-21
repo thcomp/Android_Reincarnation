@@ -23,14 +23,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTestA(){
         Bundle outState = new Bundle();
-        RootA rootA = new RootA();
-        rootA.initialize();
+        RootAWrapper rootA = new RootAWrapper();
+        rootA.rootA = new RootA();
+        rootA.rootA.initialize();
+        rootA.rootA.context = this;
         ReincarnationHelper.save(rootA, outState);
 
-        RootA rootANew = new RootA();
+        RootAWrapper rootANew = new RootAWrapper();
         ReincarnationHelper.restore(rootANew, outState);
 
-        if(rootA.equalsOnlyPublic(rootANew)){
+        if(rootA.rootA.equalsOnlyPublic(rootANew.rootA)){
             Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
@@ -39,14 +41,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTestA_All(){
         Bundle outState = new Bundle();
-        RootA rootA = new RootA();
-        rootA.initialize();
+        RootAWrapper rootA = new RootAWrapper();
+        rootA.rootA = new RootA();
+        rootA.rootA.initialize();
         ReincarnationHelper.saveAll(rootA, outState);
 
-        RootA rootANew = new RootA();
+        RootAWrapper rootANew = new RootAWrapper();
         ReincarnationHelper.restoreAll(rootANew, outState);
 
-        if(rootA.equals(rootANew)){
+        if(rootA.rootA.equals(rootANew.rootA)){
             Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
@@ -55,14 +58,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTestB(){
         Bundle outState = new Bundle();
-        RootB rootB = new RootB();
-        rootB.initialize();
+        RootBWrapper rootB = new RootBWrapper();
+        rootB.rootB = new RootB();
+        rootB.rootB.initialize();
         ReincarnationHelper.save(rootB, outState);
 
-        RootB rootBNew = new RootB();
+        RootBWrapper rootBNew = new RootBWrapper();
         ReincarnationHelper.restore(rootBNew, outState);
 
-        if(rootB.equalsOnlyPublic(rootBNew)){
+        if(rootB.rootB.equalsOnlyPublic(rootBNew.rootB)){
             Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
@@ -71,14 +75,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTestB_All(){
         Bundle outState = new Bundle();
-        RootB rootB = new RootB();
-        rootB.initialize();
+        RootBWrapper rootB = new RootBWrapper();
+        rootB.rootB = new RootB();
+        rootB.rootB.initialize();
         ReincarnationHelper.saveAll(rootB, outState);
 
-        RootB rootBNew = new RootB();
+        RootBWrapper rootBNew = new RootBWrapper();
         ReincarnationHelper.restoreAll(rootBNew, outState);
 
-        if(rootB.equals(rootBNew)){
+        if(rootB.rootB.equals(rootBNew.rootB)){
             Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
@@ -87,14 +92,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTestC(){
         Bundle outState = new Bundle();
-        RootC rootC = new RootC();
-        rootC.initialize();
+        RootCWrapper rootC = new RootCWrapper();
+        rootC.rootC = new RootC();
+        rootC.rootC.initialize();
         ReincarnationHelper.save(rootC, outState);
 
-        RootB rootCNew = new RootC();
+        RootCWrapper rootCNew = new RootCWrapper();
         ReincarnationHelper.restore(rootCNew, outState);
 
-        if(rootC.equalsOnlyPublic(rootCNew)){
+        if(rootC.rootC.equalsOnlyPublic(rootCNew.rootC)){
             Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
@@ -125,4 +131,19 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    private static class RootAWrapper {
+        @ReincarnationHelper.TargetField
+        public RootA rootA;
+    }
+
+    private static class RootBWrapper {
+        @ReincarnationHelper.TargetField
+        public RootB rootB;
+    }
+
+    private static class RootCWrapper {
+        @ReincarnationHelper.TargetField
+        public RootC rootC;
+    }
 }

@@ -6,7 +6,6 @@ import jp.co.thcomp.reincarnation.ReincarnationHelper;
  * Created by H_Tatsuguchi on 2016/11/20.
  */
 
-@ReincarnationHelper.TargetClass
 public class SubA {
     public SubC publicSub1 = new SubC();
 //    private SubC privateSub1;

@@ -10,7 +10,6 @@ import jp.co.thcomp.reincarnation.ReincarnationHelper;
  * Created by H_Tatsuguchi on 2016/11/20.
  */
 
-@ReincarnationHelper.TargetClass
 public class RootC extends RootB {
     public byte[] publicArrayA = new byte[10];
     public char[] publicArrayB = new char[10];

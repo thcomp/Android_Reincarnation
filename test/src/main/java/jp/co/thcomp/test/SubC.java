@@ -6,7 +6,6 @@ import jp.co.thcomp.reincarnation.ReincarnationHelper;
  * Created by H_Tatsuguchi on 2016/11/20.
  */
 
-@ReincarnationHelper.TargetClass
 public class SubC {
     public String publicA;
 //    private String privateA;
