@@ -249,8 +249,7 @@ public class ReincarnationHelper {
                                     // 配列ではないデータを保存
                                     fieldObject = createNewInstance(param.state.get(baseName), field.getType().getName());
                                 } else {
-                                    // 配列データを保存
-                                    fieldObject = new Object[dataCount];
+                                    fieldObject = createNewCollectionInstance(field, dataCount);
                                 }
                                 field.set(param.targetInstance, fieldObject);
                             }
@@ -894,6 +893,28 @@ public class ReincarnationHelper {
         } else {
             Constructor arrayItemConstructor = itemClass.getConstructor();
             ret = arrayItemConstructor.newInstance();
+        }
+
+        return ret;
+    }
+
+    private static Object createNewCollectionInstance(Field field, int dataCount) {
+        Object ret = null;
+        Class fieldTypeClass = null;
+
+        fieldTypeClass = field.getType().getClass();
+        try {
+            Constructor fieldClassConstructor = fieldTypeClass.getConstructor();
+            ret = fieldClassConstructor.newInstance();
+        } catch (NoSuchMethodException e) {
+            // 配列且つ非primitiveなデータの配列と判断し、Object[dataCount]を返却
+            ret = new Object[dataCount];
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
         }
 
         return ret;
