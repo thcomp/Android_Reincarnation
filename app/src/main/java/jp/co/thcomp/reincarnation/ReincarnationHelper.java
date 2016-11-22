@@ -11,11 +11,9 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.security.cert.CollectionCertStoreParameters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by H_Tatsuguchi on 2016/11/20.
@@ -148,6 +146,11 @@ public class ReincarnationHelper {
                                 }
                             } else if (fieldObject instanceof List) {
                                 param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                if (fieldObject != null) {
+                                    param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
+                                } else {
+                                    param.state.putString(baseName + CLASS_NAME, null);
+                                }
                                 if (dataCount > 0) {
                                     int index = 0;
                                     Bundle nextBundle = new Bundle();
@@ -166,6 +169,11 @@ public class ReincarnationHelper {
                                 }
                             } else if (fieldObject instanceof Map) {
                                 param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                if (fieldObject != null) {
+                                    param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
+                                } else {
+                                    param.state.putString(baseName + CLASS_NAME, null);
+                                }
                                 if (dataCount > 0) {
                                     int index = 0;
                                     Bundle nextBundle = new Bundle();
@@ -191,6 +199,11 @@ public class ReincarnationHelper {
                                 }
                             } else {
                                 param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                if (fieldObject != null) {
+                                    param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
+                                } else {
+                                    param.state.putString(baseName + CLASS_NAME, null);
+                                }
 
                                 Bundle nextBundle = new Bundle();
                                 param.state.putBundle(baseName, nextBundle);
@@ -251,7 +264,10 @@ public class ReincarnationHelper {
                                     // 配列ではないデータを保存
                                     fieldObject = createNewInstance(param.state.get(baseName), field.getType().getName());
                                 } else {
-                                    fieldObject = createNewCollectionInstance(field, dataCount);
+                                    String className = param.state.getString(baseName + CLASS_NAME);
+                                    if (className != null) {
+                                        fieldObject = createNewCollectionInstance(className, dataCount);
+                                    }
                                 }
                                 field.set(param.targetInstance, fieldObject);
                             }
@@ -860,35 +876,37 @@ public class ReincarnationHelper {
     public static Object createNewInstance(Object valueObject, String className) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
         Object ret = null;
 
-        Class itemClass = Class.forName(className);
-        if (itemClass.equals(Byte.class)) {
-            ret = Byte.valueOf((byte) valueObject);
-        } else if (itemClass.equals(Character.class)) {
-            ret = Character.valueOf((char) valueObject);
-        } else if (itemClass.equals(Short.class)) {
-            ret = Short.valueOf((short) valueObject);
-        } else if (itemClass.equals(Integer.class)) {
-            ret = Integer.valueOf((int) valueObject);
-        } else if (itemClass.equals(Long.class)) {
-            ret = Long.valueOf((long) valueObject);
-        } else if (itemClass.equals(Float.class)) {
-            ret = Float.valueOf((float) valueObject);
-        } else if (itemClass.equals(Double.class)) {
-            ret = Double.valueOf((double) valueObject);
-        } else if (itemClass.equals(String.class)) {
-            ret = valueObject;
-        } else {
-            Constructor arrayItemConstructor = itemClass.getConstructor();
-            ret = arrayItemConstructor.newInstance();
+        if (className != null) {
+            Class itemClass = Class.forName(className);
+            if (itemClass.equals(Byte.class)) {
+                ret = Byte.valueOf((byte) valueObject);
+            } else if (itemClass.equals(Character.class)) {
+                ret = Character.valueOf((char) valueObject);
+            } else if (itemClass.equals(Short.class)) {
+                ret = Short.valueOf((short) valueObject);
+            } else if (itemClass.equals(Integer.class)) {
+                ret = Integer.valueOf((int) valueObject);
+            } else if (itemClass.equals(Long.class)) {
+                ret = Long.valueOf((long) valueObject);
+            } else if (itemClass.equals(Float.class)) {
+                ret = Float.valueOf((float) valueObject);
+            } else if (itemClass.equals(Double.class)) {
+                ret = Double.valueOf((double) valueObject);
+            } else if (itemClass.equals(String.class)) {
+                ret = valueObject;
+            } else {
+                Constructor arrayItemConstructor = itemClass.getConstructor();
+                ret = arrayItemConstructor.newInstance();
+            }
         }
 
         return ret;
     }
 
-    private static Object createNewCollectionInstance(Field field, int dataCount) {
+    private static Object createNewCollectionInstance(String className, int dataCount) {
         Object ret = null;
-        Class fieldTypeClass = field.getType();
         try {
+            Class fieldTypeClass = Class.forName(className);
             Constructor fieldClassConstructor = fieldTypeClass.getConstructor();
             ret = fieldClassConstructor.newInstance();
         } catch (NoSuchMethodException e) {
@@ -900,22 +918,24 @@ public class ReincarnationHelper {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
 
         return ret;
     }
 
-    private static void getAllFields(Class targetClass, List<Field> fieldList){
+    private static void getAllFields(Class targetClass, List<Field> fieldList) {
         Field[] fields = targetClass.getDeclaredFields();
 
-        if(fields != null && fields.length > 0){
-            for(Field field : fields){
+        if (fields != null && fields.length > 0) {
+            for (Field field : fields) {
                 fieldList.add(field);
             }
         }
 
         Class superClass = targetClass.getSuperclass();
-        if(!superClass.equals(Object.class)){
+        if (!superClass.equals(Object.class)) {
             getAllFields(superClass, fieldList);
         }
     }
