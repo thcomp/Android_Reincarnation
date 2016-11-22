@@ -436,7 +436,13 @@ public class ReincarnationHelper {
             String fieldTypeName = field.getType().getName();
 
             field.setAccessible(true);
-            if (fieldTypeName.equals(byte.class.getName())) {
+            if (fieldTypeName.equals(boolean.class.getName())) {
+                primitiveType = true;
+                param.state.putBoolean(createAbsoluteName(param.parentConcatName, field), field.getBoolean(param.targetInstance));
+            } else if (fieldTypeName.equals(boolean[].class.getName())) {
+                primitiveType = true;
+                param.state.putBooleanArray(createAbsoluteName(param.parentConcatName, field), (boolean[]) field.get(param.targetInstance));
+            } else if (fieldTypeName.equals(byte.class.getName())) {
                 primitiveType = true;
                 param.state.putByte(createAbsoluteName(param.parentConcatName, field), field.getByte(param.targetInstance));
             } else if (fieldTypeName.equals(byte[].class.getName())) {
@@ -478,6 +484,12 @@ public class ReincarnationHelper {
             } else if (fieldTypeName.equals(double[].class.getName())) {
                 primitiveType = true;
                 param.state.putDoubleArray(createAbsoluteName(param.parentConcatName, field), (double[]) field.get(param.targetInstance));
+            } else if (fieldTypeName.equals(Boolean.class.getName())) {
+                primitiveType = true;
+                param.state.putBoolean(createAbsoluteName(param.parentConcatName, field), (Boolean) field.get(param.targetInstance));
+            } else if (fieldTypeName.equals(Boolean[].class.getName())) {
+                primitiveType = true;
+                param.state.putBooleanArray(createAbsoluteName(param.parentConcatName, field), (boolean[]) changeToPrimitive(field.get(param.targetInstance)));
             } else if (fieldTypeName.equals(Byte.class.getName())) {
                 primitiveType = true;
                 param.state.putByte(createAbsoluteName(param.parentConcatName, field), (Byte) field.get(param.targetInstance));
@@ -534,7 +546,10 @@ public class ReincarnationHelper {
         boolean primitiveClassType = false;
         String fieldTypeName = value.getClass().getName();
 
-        if (fieldTypeName.equals(Byte.class.getName())) {
+        if (fieldTypeName.equals(Boolean.class.getName())) {
+            primitiveClassType = true;
+            param.state.putBoolean(param.parentConcatName, (Boolean) value);
+        } else if (fieldTypeName.equals(Byte.class.getName())) {
             primitiveClassType = true;
             param.state.putByte(param.parentConcatName, (Byte) value);
         } else if (fieldTypeName.equals(Character.class.getName())) {
@@ -567,7 +582,9 @@ public class ReincarnationHelper {
         boolean primitiveClassType = false;
         String fieldTypeName = value.getClass().getName();
 
-        if (fieldTypeName.equals(Byte.class.getName())) {
+        if (fieldTypeName.equals(Boolean.class.getName())) {
+            primitiveClassType = true;
+        } else if (fieldTypeName.equals(Byte.class.getName())) {
             primitiveClassType = true;
         } else if (fieldTypeName.equals(Character.class.getName())) {
             primitiveClassType = true;
@@ -595,7 +612,13 @@ public class ReincarnationHelper {
             String fieldTypeName = field.getType().getName();
 
             field.setAccessible(true);
-            if (fieldTypeName.equals(byte.class.getName())) {
+            if (fieldTypeName.equals(boolean.class.getName())) {
+                primitiveType = true;
+                field.setBoolean(param.targetInstance, param.state.getBoolean(createAbsoluteName(param.parentConcatName, field)));
+            } else if (fieldTypeName.equals(boolean[].class.getName())) {
+                primitiveType = true;
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
+            } else if (fieldTypeName.equals(byte.class.getName())) {
                 primitiveType = true;
                 field.setByte(param.targetInstance, param.state.getByte(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(byte[].class.getName())) {
@@ -637,45 +660,51 @@ public class ReincarnationHelper {
             } else if (fieldTypeName.equals(double[].class.getName())) {
                 primitiveType = true;
                 field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
+            } else if (fieldTypeName.equals(Boolean.class.getName())) {
+                primitiveType = true;
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
+            } else if (fieldTypeName.equals(Boolean[].class.getName())) {
+                primitiveType = true;
+                field.set(param.targetInstance, changeToClass(param.state.get(createAbsoluteName(param.parentConcatName, field))));
             } else if (fieldTypeName.equals(Byte.class.getName())) {
                 primitiveType = true;
-                field.set(param.targetInstance, (Byte) param.state.get(createAbsoluteName(param.parentConcatName, field)));
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(Byte[].class.getName())) {
                 primitiveType = true;
                 field.set(param.targetInstance, changeToClass(param.state.get(createAbsoluteName(param.parentConcatName, field))));
             } else if (fieldTypeName.equals(Character.class.getName())) {
                 primitiveType = true;
-                field.set(param.targetInstance, (Character) param.state.get(createAbsoluteName(param.parentConcatName, field)));
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(Character[].class.getName())) {
                 primitiveType = true;
                 field.set(param.targetInstance, changeToClass(param.state.get(createAbsoluteName(param.parentConcatName, field))));
             } else if (fieldTypeName.equals(Short.class.getName())) {
                 primitiveType = true;
-                field.set(param.targetInstance, (Short) param.state.get(createAbsoluteName(param.parentConcatName, field)));
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(Short[].class.getName())) {
                 primitiveType = true;
                 field.set(param.targetInstance, changeToClass(param.state.get(createAbsoluteName(param.parentConcatName, field))));
             } else if (fieldTypeName.equals(Integer.class.getName())) {
                 primitiveType = true;
-                field.set(param.targetInstance, (Integer) param.state.get(createAbsoluteName(param.parentConcatName, field)));
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(Integer[].class.getName())) {
                 primitiveType = true;
                 field.set(param.targetInstance, changeToClass(param.state.get(createAbsoluteName(param.parentConcatName, field))));
             } else if (fieldTypeName.equals(Long.class.getName())) {
                 primitiveType = true;
-                field.set(param.targetInstance, (Long) param.state.get(createAbsoluteName(param.parentConcatName, field)));
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(Long[].class.getName())) {
                 primitiveType = true;
                 field.set(param.targetInstance, changeToClass(param.state.get(createAbsoluteName(param.parentConcatName, field))));
             } else if (fieldTypeName.equals(Float.class.getName())) {
                 primitiveType = true;
-                field.set(param.targetInstance, (Float) param.state.get(createAbsoluteName(param.parentConcatName, field)));
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(Float[].class.getName())) {
                 primitiveType = true;
                 field.set(param.targetInstance, changeToClass(param.state.get(createAbsoluteName(param.parentConcatName, field))));
             } else if (fieldTypeName.equals(Double.class.getName())) {
                 primitiveType = true;
-                field.set(param.targetInstance, (Double) param.state.get(createAbsoluteName(param.parentConcatName, field)));
+                field.set(param.targetInstance, param.state.get(createAbsoluteName(param.parentConcatName, field)));
             } else if (fieldTypeName.equals(Double[].class.getName())) {
                 primitiveType = true;
                 field.set(param.targetInstance, changeToClass(param.state.getDoubleArray(createAbsoluteName(param.parentConcatName, field))));
@@ -736,7 +765,16 @@ public class ReincarnationHelper {
     private static Object changeToClass(Object object) {
         Object ret = null;
 
-        if (object instanceof byte[]) {
+        if (object instanceof boolean[]) {
+            boolean[] srcArray = (boolean[]) object;
+            Boolean[] destArray = new Boolean[srcArray.length];
+
+            for (int i = 0, size = srcArray.length; i < size; i++) {
+                destArray[i] = srcArray[i];
+            }
+
+            ret = destArray;
+        } else if (object instanceof byte[]) {
             byte[] srcArray = (byte[]) object;
             Byte[] destArray = new Byte[srcArray.length];
 
@@ -808,7 +846,16 @@ public class ReincarnationHelper {
     private static Object changeToPrimitive(Object object) {
         Object ret = null;
 
-        if (object instanceof Byte[]) {
+        if (object instanceof Boolean[]) {
+            Boolean[] srcArray = (Boolean[]) object;
+            boolean[] destArray = new boolean[srcArray.length];
+
+            for (int i = 0, size = srcArray.length; i < size; i++) {
+                destArray[i] = srcArray[i];
+            }
+
+            ret = destArray;
+        } else if (object instanceof Byte[]) {
             Byte[] srcArray = (Byte[]) object;
             byte[] destArray = new byte[srcArray.length];
 
@@ -882,7 +929,9 @@ public class ReincarnationHelper {
 
         if (className != null) {
             Class itemClass = Class.forName(className);
-            if (itemClass.equals(Byte.class)) {
+            if (itemClass.equals(Boolean.class)) {
+                ret = Boolean.valueOf((boolean) valueObject);
+            } else if (itemClass.equals(Byte.class)) {
                 ret = Byte.valueOf((byte) valueObject);
             } else if (itemClass.equals(Character.class)) {
                 ret = Character.valueOf((char) valueObject);
