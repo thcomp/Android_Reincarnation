@@ -9,6 +9,13 @@ import jp.co.thcomp.reincarnation.ReincarnationHelper;
  */
 
 public class RootA {
+    public enum Type{
+        Type1,
+        Type2,
+        Type3,
+        Type4;
+    }
+
     @ReincarnationHelper.UntargetField
     Context context;
 
@@ -44,6 +51,9 @@ public class RootA {
     public String publicH = "0";
     private String privateH = "0";
 
+    public Type publicRootType;
+    public Type privateRootType;
+
     public void initialize() {
         publicA = 10;
         privateA = 10;
@@ -76,6 +86,9 @@ public class RootA {
         privateG2 = Double.valueOf(10);
         publicH = "10";
         privateH = "10";
+
+        publicRootType= Type.Type2;
+        privateRootType = Type.Type3;
     }
 
     @Override
@@ -129,7 +142,11 @@ public class RootA {
             return false;
         if (publicH != null ? !publicH.equals(rootA.publicH) : rootA.publicH != null)
             return false;
-        return privateH != null ? privateH.equals(rootA.privateH) : rootA.privateH == null;
+        if (privateH != null ? !privateH.equals(rootA.privateH) : rootA.privateH != null)
+            return false;
+        if (publicRootType != null ? !publicRootType.equals(rootA.publicRootType) : rootA.publicRootType != null)
+            return false;
+        return privateRootType != null ? privateRootType.equals(rootA.privateRootType) : rootA.privateRootType == null;
     }
 
     public boolean equalsOnlyPublic(Object o) {
@@ -160,6 +177,8 @@ public class RootA {
         if (publicG2 != null ? !publicG2.equals(rootA.publicG2) : rootA.publicG2 != null)
             return false;
         if (publicH != null ? !publicH.equals(rootA.publicH) : rootA.publicH != null)
+            return false;
+        if (publicRootType != null ? !publicRootType.equals(rootA.publicRootType) : rootA.publicRootType != null)
             return false;
         return true;
     }

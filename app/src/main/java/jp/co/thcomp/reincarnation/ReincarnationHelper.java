@@ -11,6 +11,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,18 +28,29 @@ public class ReincarnationHelper {
     private static final String VALUE_NAME = ABSOLUTE_NAME_SEPARATER + "+Value+";
     private static final String CLASS_NAME = ABSOLUTE_NAME_SEPARATER + "+Class+";
 
+    /**
+     * save/restoreの対象にするannotation
+     */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD})
     public @interface TargetField {
 
     }
 
+    /**
+     * save/restoreの対象外にするannotation
+     */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD})
     public @interface UntargetField {
 
     }
 
+    /**
+     * instance内のpublicフィールド内のTargetFieldが指定されたフィールドを保存
+     * @param instance
+     * @param outBundle
+     */
     public static void save(Object instance, Bundle outBundle) {
         Parameter param = new Parameter();
         param.targetInstance = instance;
@@ -48,6 +60,11 @@ public class ReincarnationHelper {
         saveLocal(param);
     }
 
+    /**
+     * instance内のpublicフィールド内のTargetFieldが指定されたフィールドを展開
+     * @param instance
+     * @param savedInstance
+     */
     public static void restore(Object instance, Bundle savedInstance) {
         Parameter param = new Parameter();
         param.targetInstance = instance;
@@ -57,6 +74,11 @@ public class ReincarnationHelper {
         restoreLocal(param);
     }
 
+    /**
+     * instance内の全フィールド内のTargetFieldが指定されたフィールドを保存
+     * @param instance
+     * @param outBundle
+     */
     public static void saveAll(Object instance, Bundle outBundle) {
         Parameter param = new Parameter();
         param.targetInstance = instance;
@@ -66,6 +88,11 @@ public class ReincarnationHelper {
         saveLocal(param);
     }
 
+    /**
+     * instance内の全フィールド内のTargetFieldが指定されたフィールドを展開
+     * @param instance
+     * @param savedInstance
+     */
     public static void restoreAll(Object instance, Bundle savedInstance) {
         Parameter param = new Parameter();
         param.targetInstance = instance;
@@ -101,9 +128,13 @@ public class ReincarnationHelper {
                 }
 
                 if (targetField) {
+                    // 以下の型(配列含む)を保存
+                    // boolean, byte, char, short, int, long, float, double
+                    // Boolean, Byte, Character, Integer, Long, Float, Double
                     boolean primitiveType = savePrimitiveData(param, field);
 
                     if (!primitiveType) {
+                        // 非primitiveデータの保存
                         try {
                             field.setAccessible(true);
                             Object fieldObject = field.get(param.targetInstance);
@@ -114,7 +145,7 @@ public class ReincarnationHelper {
                             int dataCount = getDataCount(fieldObject);
 
                             if (fieldObject == null) {
-                                // オブジェクトがnullなので処理なし
+                                // オブジェクトがnullなので保存するインスタンスがないので処理なし
                             } else {
                                 if (fieldObject instanceof String) {
                                     // 非配列のオブジェクトなので、dataCountとしてNONE_ARRAY_FIELD_COUNTを入れて置き、展開時に配列か否かの判断に使用
@@ -200,13 +231,15 @@ public class ReincarnationHelper {
                                             index++;
                                         }
                                     }
+                                }else if(fieldObject.getClass().isEnum()){
+                                    // enumはそのままインスタンスとして保存しようとすると、無限ループが発生するので、型と名前のみ保持
+                                    param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
+
+                                    Method enumNameMethod = fieldObject.getClass().getMethod("name");
+                                    param.state.putString(baseName, (String) enumNameMethod.invoke(fieldObject));
                                 } else {
                                     param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                    if (fieldObject != null) {
-                                        param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
-                                    } else {
-                                        param.state.putString(baseName + CLASS_NAME, null);
-                                    }
+                                    param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
 
                                     Bundle nextBundle = new Bundle();
                                     param.state.putBundle(baseName, nextBundle);
@@ -220,6 +253,10 @@ public class ReincarnationHelper {
                                 }
                             }
                         } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (NoSuchMethodException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
                             e.printStackTrace();
                         } finally {
                             field.setAccessible(false);
@@ -947,6 +984,9 @@ public class ReincarnationHelper {
                 ret = Double.valueOf((double) valueObject);
             } else if (itemClass.equals(String.class)) {
                 ret = valueObject;
+            } else if(itemClass.isEnum()){
+                Method enumNameMethod = itemClass.getMethod("valueOf", String.class);
+                ret = enumNameMethod.invoke(null, valueObject);
             } else {
                 Constructor arrayItemConstructor = itemClass.getConstructor();
                 ret = arrayItemConstructor.newInstance();
