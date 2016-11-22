@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import jp.ne.colon.wakuwaku.api.gson.MemoApi;
+
 /**
  * Created by H_Tatsuguchi on 2016/11/20.
  */
@@ -113,106 +115,110 @@ public class ReincarnationHelper {
                             String baseName = createAbsoluteName(param.parentConcatName, field);
                             int dataCount = getDataCount(fieldObject);
 
-                            if (fieldObject instanceof String) {
-                                // 非配列のオブジェクトなので、dataCountとしてNONE_ARRAY_FIELD_COUNTを入れて置き、展開時に配列か否かの判断に使用
-                                param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                param.state.putString(createAbsoluteName(param.parentConcatName, field), (String) fieldObject);
-                            } else if (fieldObject instanceof String[]) {
-                                param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                param.state.putStringArray(createAbsoluteName(param.parentConcatName, field), (String[]) fieldObject);
-                            } else if (fieldObject instanceof Parcelable) {
-                                param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                param.state.putParcelable(createAbsoluteName(param.parentConcatName, field), (Parcelable) fieldObject);
-                            } else if (fieldObject instanceof Parcelable[]) {
-                                param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                param.state.putParcelableArray(createAbsoluteName(param.parentConcatName, field), (Parcelable[]) fieldObject);
-                            } else if (fieldObject instanceof Object[]) {
-                                param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                if (dataCount > 0) {
-                                    int index = 0;
-                                    Bundle nextBundle = new Bundle();
-                                    param.state.putBundle(baseName, nextBundle);
-                                    nextParam.state = nextBundle;
-
-                                    for (Object listItem : (Object[]) fieldObject) {
-                                        nextParam.parentConcatName = baseName + VALUE_NAME + index;
-                                        nextParam.targetInstance = listItem;
-                                        nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, listItem.getClass().getName());
-                                        if (!savePrimitiveClassData(nextParam, listItem)) {
-                                            saveLocal(nextParam);
-                                        }
-                                        index++;
-                                    }
-                                }
-                            } else if (fieldObject instanceof List) {
-                                param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                if (fieldObject != null) {
-                                    param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
-                                } else {
-                                    param.state.putString(baseName + CLASS_NAME, null);
-                                }
-                                if (dataCount > 0) {
-                                    int index = 0;
-                                    Bundle nextBundle = new Bundle();
-                                    param.state.putBundle(baseName, nextBundle);
-                                    nextParam.state = nextBundle;
-
-                                    for (Object listItem : (List) fieldObject) {
-                                        nextParam.parentConcatName = baseName + VALUE_NAME + index;
-                                        nextParam.targetInstance = listItem;
-                                        nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, listItem.getClass().getName());
-                                        if (!savePrimitiveClassData(nextParam, listItem)) {
-                                            saveLocal(nextParam);
-                                        }
-                                        index++;
-                                    }
-                                }
-                            } else if (fieldObject instanceof Map) {
-                                param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                if (fieldObject != null) {
-                                    param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
-                                } else {
-                                    param.state.putString(baseName + CLASS_NAME, null);
-                                }
-                                if (dataCount > 0) {
-                                    int index = 0;
-                                    Bundle nextBundle = new Bundle();
-                                    param.state.putBundle(baseName, nextBundle);
-                                    nextParam.state = nextBundle;
-
-                                    for (Object mapEntry : ((Map) fieldObject).entrySet()) {
-                                        nextParam.parentConcatName = baseName + KEY_NAME + index;
-                                        nextParam.targetInstance = ((Map.Entry) mapEntry).getKey();
-                                        nextParam.state.putString(baseName + KEY_NAME + CLASS_NAME + index, nextParam.targetInstance.getClass().getName());
-                                        if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
-                                            saveLocal(nextParam);
-                                        }
-
-                                        nextParam.parentConcatName = baseName + VALUE_NAME + index;
-                                        nextParam.targetInstance = ((Map.Entry) mapEntry).getValue();
-                                        nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, nextParam.targetInstance.getClass().getName());
-                                        if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
-                                            saveLocal(nextParam);
-                                        }
-                                        index++;
-                                    }
-                                }
+                            if (fieldObject == null) {
+                                // オブジェクトがnullなので処理なし
                             } else {
-                                param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
-                                if (fieldObject != null) {
-                                    param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
+                                if (fieldObject instanceof String) {
+                                    // 非配列のオブジェクトなので、dataCountとしてNONE_ARRAY_FIELD_COUNTを入れて置き、展開時に配列か否かの判断に使用
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    param.state.putString(createAbsoluteName(param.parentConcatName, field), (String) fieldObject);
+                                } else if (fieldObject instanceof String[]) {
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    param.state.putStringArray(createAbsoluteName(param.parentConcatName, field), (String[]) fieldObject);
+                                } else if (fieldObject instanceof Parcelable) {
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    param.state.putParcelable(createAbsoluteName(param.parentConcatName, field), (Parcelable) fieldObject);
+                                } else if (fieldObject instanceof Parcelable[]) {
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    param.state.putParcelableArray(createAbsoluteName(param.parentConcatName, field), (Parcelable[]) fieldObject);
+                                } else if (fieldObject instanceof Object[]) {
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    if (dataCount > 0) {
+                                        int index = 0;
+                                        Bundle nextBundle = new Bundle();
+                                        param.state.putBundle(baseName, nextBundle);
+                                        nextParam.state = nextBundle;
+
+                                        for (Object listItem : (Object[]) fieldObject) {
+                                            nextParam.parentConcatName = baseName + VALUE_NAME + index;
+                                            nextParam.targetInstance = listItem;
+                                            nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, listItem.getClass().getName());
+                                            if (!savePrimitiveClassData(nextParam, listItem)) {
+                                                saveLocal(nextParam);
+                                            }
+                                            index++;
+                                        }
+                                    }
+                                } else if (fieldObject instanceof List) {
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    if (fieldObject != null) {
+                                        param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
+                                    } else {
+                                        param.state.putString(baseName + CLASS_NAME, null);
+                                    }
+                                    if (dataCount > 0) {
+                                        int index = 0;
+                                        Bundle nextBundle = new Bundle();
+                                        param.state.putBundle(baseName, nextBundle);
+                                        nextParam.state = nextBundle;
+
+                                        for (Object listItem : (List) fieldObject) {
+                                            nextParam.parentConcatName = baseName + VALUE_NAME + index;
+                                            nextParam.targetInstance = listItem;
+                                            nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, listItem.getClass().getName());
+                                            if (!savePrimitiveClassData(nextParam, listItem)) {
+                                                saveLocal(nextParam);
+                                            }
+                                            index++;
+                                        }
+                                    }
+                                } else if (fieldObject instanceof Map) {
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    if (fieldObject != null) {
+                                        param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
+                                    } else {
+                                        param.state.putString(baseName + CLASS_NAME, null);
+                                    }
+                                    if (dataCount > 0) {
+                                        int index = 0;
+                                        Bundle nextBundle = new Bundle();
+                                        param.state.putBundle(baseName, nextBundle);
+                                        nextParam.state = nextBundle;
+
+                                        for (Object mapEntry : ((Map) fieldObject).entrySet()) {
+                                            nextParam.parentConcatName = baseName + KEY_NAME + index;
+                                            nextParam.targetInstance = ((Map.Entry) mapEntry).getKey();
+                                            nextParam.state.putString(baseName + KEY_NAME + CLASS_NAME + index, nextParam.targetInstance.getClass().getName());
+                                            if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
+                                                saveLocal(nextParam);
+                                            }
+
+                                            nextParam.parentConcatName = baseName + VALUE_NAME + index;
+                                            nextParam.targetInstance = ((Map.Entry) mapEntry).getValue();
+                                            nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, nextParam.targetInstance.getClass().getName());
+                                            if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
+                                                saveLocal(nextParam);
+                                            }
+                                            index++;
+                                        }
+                                    }
                                 } else {
-                                    param.state.putString(baseName + CLASS_NAME, null);
-                                }
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    if (fieldObject != null) {
+                                        param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
+                                    } else {
+                                        param.state.putString(baseName + CLASS_NAME, null);
+                                    }
 
-                                Bundle nextBundle = new Bundle();
-                                param.state.putBundle(baseName, nextBundle);
-                                nextParam.state = nextBundle;
+                                    Bundle nextBundle = new Bundle();
+                                    param.state.putBundle(baseName, nextBundle);
+                                    nextParam.state = nextBundle;
 
-                                nextParam.parentConcatName = createAbsoluteName(param.parentConcatName, field);
-                                nextParam.targetInstance = field.get(param.targetInstance);
-                                if (nextParam.targetInstance != null) {
-                                    saveLocal(nextParam);
+                                    nextParam.parentConcatName = createAbsoluteName(param.parentConcatName, field);
+                                    nextParam.targetInstance = field.get(param.targetInstance);
+                                    if (nextParam.targetInstance != null) {
+                                        saveLocal(nextParam);
+                                    }
                                 }
                             }
                         } catch (IllegalAccessException e) {
@@ -383,6 +389,9 @@ public class ReincarnationHelper {
                                     }
                                 } else {
                                     nextParam.state = param.state.getBundle(baseName);
+                                    if (fieldObject instanceof MemoApi) {
+                                        new Exception().printStackTrace();
+                                    }
 
                                     if (nextParam.state != null) {
                                         nextParam.parentConcatName = baseName;
