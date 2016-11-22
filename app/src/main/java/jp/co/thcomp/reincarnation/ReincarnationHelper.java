@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jp.ne.colon.wakuwaku.api.gson.MemoApi;
-
 /**
  * Created by H_Tatsuguchi on 2016/11/20.
  */
@@ -389,9 +387,6 @@ public class ReincarnationHelper {
                                     }
                                 } else {
                                     nextParam.state = param.state.getBundle(baseName);
-                                    if (fieldObject instanceof MemoApi) {
-                                        new Exception().printStackTrace();
-                                    }
 
                                     if (nextParam.state != null) {
                                         nextParam.parentConcatName = baseName;
