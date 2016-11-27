@@ -1,9 +1,16 @@
 package jp.co.thcomp.test;
 
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import jp.co.thcomp.reincarnation.ReincarnationHelper;
 
@@ -19,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnStartTestB).setOnClickListener(mBtnClickListener);
         findViewById(R.id.btnStartTestB_All).setOnClickListener(mBtnClickListener);
         findViewById(R.id.btnStartTestC).setOnClickListener(mBtnClickListener);
+        findViewById(R.id.btnStartTestUri).setOnClickListener(mBtnClickListener);
     }
 
     private void startTestA(){
@@ -107,6 +115,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void startTestUri(){
+        Bundle outState = new Bundle();
+        UriWrapper uriWrapper = new UriWrapper();
+        uriWrapper.uri = Uri.parse("http://www.google.co.jp/test/test2/a.cgi?param1=SSSS&param2=33333");
+        uriWrapper.uriArray = new Uri[5];
+        uriWrapper.uriList = new ArrayList<Uri>();
+        uriWrapper.uriMap = new HashMap<Uri, Uri>();
+        for(int i=0, size=uriWrapper.uriArray.length; i<size; i++){
+            uriWrapper.uriArray[i] = Uri.parse("http://www.google.co.jp/test/array_" + i + "/a.cgi?param1=SSSS&param2=33333");
+            uriWrapper.uriList.add(Uri.parse("http://www.google.co.jp/test/list_" + i + "/a.cgi?param1=SSSS&param2=33333"));
+            uriWrapper.uriMap.put(
+                    Uri.parse("http://www.google.co.jp/test/MapKey_" + i + "/a.cgi?param1=SSSS&param2=33333"),
+                    Uri.parse("http://www.google.co.jp/test/MapValue_" + i + "/a.cgi?param1=SSSS&param2=33333")
+            );
+        }
+        ReincarnationHelper.save(uriWrapper, outState);
+
+        UriWrapper uriWrapperNew = new UriWrapper();
+        ReincarnationHelper.restore(uriWrapperNew, outState);
+
+        if(uriWrapper.equals(uriWrapperNew)){
+            Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private View.OnClickListener mBtnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -128,6 +163,9 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.btnStartTestB_All:
                     startTestB_All();
                     break;
+                case R.id.btnStartTestUri:
+                    startTestUri();
+                    break;
             }
         }
     };
@@ -145,5 +183,32 @@ public class MainActivity extends AppCompatActivity {
     private static class RootCWrapper {
         @ReincarnationHelper.TargetField
         public RootC rootC;
+    }
+
+    private static class UriWrapper {
+        @ReincarnationHelper.TargetField
+        public Uri uri;
+        @ReincarnationHelper.TargetField
+        public Uri[] uriArray;
+        @ReincarnationHelper.TargetField
+        public List<Uri> uriList;
+        @ReincarnationHelper.TargetField
+        public Map<Uri, Uri> uriMap;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            UriWrapper that = (UriWrapper) o;
+
+            if (uri != null ? !uri.equals(that.uri) : that.uri != null) return false;
+            // Probably incorrect - comparing Object[] arrays with Arrays.equals
+            if (!Arrays.equals(uriArray, that.uriArray)) return false;
+            if (uriList != null ? !uriList.equals(that.uriList) : that.uriList != null)
+                return false;
+            return uriMap != null ? uriMap.equals(that.uriMap) : that.uriMap == null;
+
+        }
     }
 }

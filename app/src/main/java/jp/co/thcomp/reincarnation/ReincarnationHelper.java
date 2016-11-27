@@ -22,6 +22,7 @@ import java.util.Map;
 
 public class ReincarnationHelper {
     private static final int NONE_ARRAY_FIELD_COUNT = -1;
+    private static final int PARCELABLE_ARRAY_COUNT = -2;
     private static final String ABSOLUTE_NAME_SEPARATER = ".";
     private static final String DATA_COUNT_NAME = ABSOLUTE_NAME_SEPARATER + "+DataCount+";
     private static final String KEY_NAME = ABSOLUTE_NAME_SEPARATER + "+Key+";
@@ -48,6 +49,7 @@ public class ReincarnationHelper {
 
     /**
      * instance内のpublicフィールド内のTargetFieldが指定されたフィールドを保存
+     *
      * @param instance
      * @param outBundle
      */
@@ -62,6 +64,7 @@ public class ReincarnationHelper {
 
     /**
      * instance内のpublicフィールド内のTargetFieldが指定されたフィールドを展開
+     *
      * @param instance
      * @param savedInstance
      */
@@ -76,6 +79,7 @@ public class ReincarnationHelper {
 
     /**
      * instance内の全フィールド内のTargetFieldが指定されたフィールドを保存
+     *
      * @param instance
      * @param outBundle
      */
@@ -90,6 +94,7 @@ public class ReincarnationHelper {
 
     /**
      * instance内の全フィールド内のTargetFieldが指定されたフィールドを展開
+     *
      * @param instance
      * @param savedInstance
      */
@@ -158,7 +163,7 @@ public class ReincarnationHelper {
                                     param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
                                     param.state.putParcelable(createAbsoluteName(param.parentConcatName, field), (Parcelable) fieldObject);
                                 } else if (fieldObject instanceof Parcelable[]) {
-                                    param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
+                                    param.state.putInt(baseName + DATA_COUNT_NAME, PARCELABLE_ARRAY_COUNT);
                                     param.state.putParcelableArray(createAbsoluteName(param.parentConcatName, field), (Parcelable[]) fieldObject);
                                 } else if (fieldObject instanceof Object[]) {
                                     param.state.putInt(baseName + DATA_COUNT_NAME, dataCount);
@@ -195,8 +200,14 @@ public class ReincarnationHelper {
                                             nextParam.parentConcatName = baseName + VALUE_NAME + index;
                                             nextParam.targetInstance = listItem;
                                             nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, listItem.getClass().getName());
-                                            if (!savePrimitiveClassData(nextParam, listItem)) {
-                                                saveLocal(nextParam);
+
+                                            if (isInheritParcelable(listItem.getClass())) {
+                                                // Parcelableは直接設定
+                                                nextParam.state.putParcelable(nextParam.parentConcatName, (Parcelable) nextParam.targetInstance);
+                                            } else {
+                                                if (!savePrimitiveClassData(nextParam, listItem)) {
+                                                    saveLocal(nextParam);
+                                                }
                                             }
                                             index++;
                                         }
@@ -218,20 +229,31 @@ public class ReincarnationHelper {
                                             nextParam.parentConcatName = baseName + KEY_NAME + index;
                                             nextParam.targetInstance = ((Map.Entry) mapEntry).getKey();
                                             nextParam.state.putString(baseName + KEY_NAME + CLASS_NAME + index, nextParam.targetInstance.getClass().getName());
-                                            if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
-                                                saveLocal(nextParam);
+
+                                            if (isInheritParcelable(nextParam.targetInstance.getClass())) {
+                                                // Parcelableは直接設定
+                                                nextParam.state.putParcelable(nextParam.parentConcatName, (Parcelable) nextParam.targetInstance);
+                                            } else {
+                                                if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
+                                                    saveLocal(nextParam);
+                                                }
                                             }
 
                                             nextParam.parentConcatName = baseName + VALUE_NAME + index;
                                             nextParam.targetInstance = ((Map.Entry) mapEntry).getValue();
                                             nextParam.state.putString(baseName + VALUE_NAME + CLASS_NAME + index, nextParam.targetInstance.getClass().getName());
-                                            if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
-                                                saveLocal(nextParam);
+                                            if (isInheritParcelable(nextParam.targetInstance.getClass())) {
+                                                // Parcelableは直接設定
+                                                nextParam.state.putParcelable(nextParam.parentConcatName, (Parcelable) nextParam.targetInstance);
+                                            } else {
+                                                if (!savePrimitiveClassData(nextParam, nextParam.targetInstance)) {
+                                                    saveLocal(nextParam);
+                                                }
                                             }
                                             index++;
                                         }
                                     }
-                                }else if(fieldObject.getClass().isEnum()){
+                                } else if (fieldObject.getClass().isEnum()) {
                                     // enumはそのままインスタンスとして保存しようとすると、無限ループが発生するので、型と名前のみ保持
                                     param.state.putString(baseName + CLASS_NAME, fieldObject.getClass().getName());
 
@@ -303,14 +325,29 @@ public class ReincarnationHelper {
                             if (fieldObject == null) {
                                 if (dataCount == NONE_ARRAY_FIELD_COUNT) {
                                     // 配列ではないデータを保存
-                                    fieldObject = createNewInstance(param.state.get(baseName), field.getType().getName());
+                                    String className = field.getType().getName();
+
+                                    if (isInheritParcelable(className)) {
+                                        field.set(param.targetInstance, param.state.getParcelable(baseName));
+                                    } else {
+                                        fieldObject = createNewInstance(param.state.get(baseName), field.getType().getName());
+                                        field.set(param.targetInstance, fieldObject);
+                                    }
+                                } else if (dataCount == PARCELABLE_ARRAY_COUNT) {
+                                    // Parcelable[]なので、直接取得
+                                    field.set(param.targetInstance, param.state.getParcelableArray(baseName));
                                 } else {
                                     String className = param.state.getString(baseName + CLASS_NAME);
+
                                     if (className != null) {
-                                        fieldObject = createNewCollectionInstance(className, dataCount);
+                                        if (isInheritParcelable(className)) {
+                                            field.set(param.targetInstance, param.state.getParcelableArray(baseName));
+                                        } else {
+                                            fieldObject = createNewCollectionInstance(className, dataCount);
+                                            field.set(param.targetInstance, fieldObject);
+                                        }
                                     }
                                 }
-                                field.set(param.targetInstance, fieldObject);
                             }
 
                             if (fieldObject != null) {
@@ -322,9 +359,11 @@ public class ReincarnationHelper {
                                 } else if (fieldObject instanceof String[]) {
                                     field.set(param.targetInstance, param.state.getStringArray(baseName));
                                 } else if (fieldObject instanceof Parcelable) {
-                                    field.set(param.targetInstance, param.state.getParcelable(baseName));
+                                    //field.set(param.targetInstance, param.state.getParcelable(baseName));
+                                    // インスタンス生成時にBundleからインスタンスを展開しているので処理なし
                                 } else if (fieldObject instanceof Parcelable[]) {
-                                    field.set(param.targetInstance, param.state.getParcelableArray(baseName));
+                                    //field.set(param.targetInstance, param.state.getParcelableArray(baseName));
+                                    // インスタンス生成時にBundleからインスタンスを展開しているので処理なし
                                 } else if (fieldObject instanceof Object[]) {
                                     if (dataCount > 0) {
                                         nextParam.state = param.state.getBundle(baseName);
@@ -354,14 +393,19 @@ public class ReincarnationHelper {
                                             for (int i = 0; i < dataCount; i++) {
                                                 nextParam.parentConcatName = baseName + VALUE_NAME + i;
 
-                                                String arrayItemClassName = nextParam.state.getString(baseName + VALUE_NAME + CLASS_NAME + i, null);
-                                                if (arrayItemClassName != null) {
-                                                    Object arrayItem = createNewInstance(nextParam.state.get(nextParam.parentConcatName), arrayItemClassName);
-                                                    ((List) fieldObject).add(arrayItem);
+                                                Object tempParcelableValue = nextParam.state.getParcelable(nextParam.parentConcatName);
+                                                if (tempParcelableValue != null) {
+                                                    ((List) fieldObject).add(tempParcelableValue);
+                                                } else {
+                                                    String arrayItemClassName = nextParam.state.getString(baseName + VALUE_NAME + CLASS_NAME + i, null);
+                                                    if (arrayItemClassName != null) {
+                                                        Object arrayItem = createNewInstance(nextParam.state.get(nextParam.parentConcatName), arrayItemClassName);
+                                                        ((List) fieldObject).add(arrayItem);
 
-                                                    if (!isPrimitiveClassData(arrayItem)) {
-                                                        nextParam.targetInstance = arrayItem;
-                                                        restoreLocal(nextParam);
+                                                        if (!isPrimitiveClassData(arrayItem)) {
+                                                            nextParam.targetInstance = arrayItem;
+                                                            restoreLocal(nextParam);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -375,20 +419,32 @@ public class ReincarnationHelper {
                                             for (int i = 0; i < dataCount; i++) {
                                                 Object keyObject = null;
                                                 Object valueObject = null;
+                                                boolean isParcelableForKey = false;
+                                                boolean isParcelableForValue = false;
 
                                                 String keyName = baseName + KEY_NAME + i;
                                                 String valueName = baseName + VALUE_NAME + i;
 
-                                                String keyArrayItemClassName = nextParam.state.getString(baseName + KEY_NAME + CLASS_NAME + i, null);
-                                                if (keyArrayItemClassName != null) {
-                                                    Object arrayItem = createNewInstance(nextParam.state.get(keyName), keyArrayItemClassName);
-                                                    keyObject = arrayItem;
+                                                keyObject = nextParam.state.getParcelable(keyName);
+                                                if (keyObject != null) {
+                                                    isParcelableForKey = true;
+                                                } else {
+                                                    String keyArrayItemClassName = nextParam.state.getString(baseName + KEY_NAME + CLASS_NAME + i, null);
+                                                    if (keyArrayItemClassName != null) {
+                                                        Object arrayItem = createNewInstance(nextParam.state.get(keyName), keyArrayItemClassName);
+                                                        keyObject = arrayItem;
+                                                    }
                                                 }
 
-                                                String valueArrayItemClassName = nextParam.state.getString(baseName + VALUE_NAME + CLASS_NAME + i, null);
-                                                if (valueArrayItemClassName != null) {
-                                                    Object arrayItem = createNewInstance(nextParam.state.get(valueName), valueArrayItemClassName);
-                                                    valueObject = arrayItem;
+                                                valueObject = nextParam.state.getParcelable(valueName);
+                                                if (valueObject != null) {
+                                                    isParcelableForValue = true;
+                                                } else {
+                                                    String valueArrayItemClassName = nextParam.state.getString(baseName + VALUE_NAME + CLASS_NAME + i, null);
+                                                    if (valueArrayItemClassName != null) {
+                                                        Object arrayItem = createNewInstance(nextParam.state.get(valueName), valueArrayItemClassName);
+                                                        valueObject = arrayItem;
+                                                    }
                                                 }
 
                                                 // マップに一旦インスタンスを設定
@@ -397,7 +453,7 @@ public class ReincarnationHelper {
                                                 }
 
                                                 // キー向けのインスタンスの展開
-                                                if (!isPrimitiveClassData(keyObject)) {
+                                                if (!isParcelableForKey && !isPrimitiveClassData(keyObject)) {
                                                     nextParam.targetInstance = keyObject;
                                                     nextParam.parentConcatName = keyName;
                                                     try {
@@ -409,7 +465,7 @@ public class ReincarnationHelper {
                                                     }
                                                 }
 
-                                                if (valueObject != null && !isPrimitiveClassData(valueObject)) {
+                                                if (valueObject != null && !isParcelableForValue && !isPrimitiveClassData(valueObject)) {
                                                     nextParam.targetInstance = valueObject;
                                                     nextParam.parentConcatName = valueName;
                                                     try {
@@ -984,7 +1040,7 @@ public class ReincarnationHelper {
                 ret = Double.valueOf((double) valueObject);
             } else if (itemClass.equals(String.class)) {
                 ret = valueObject;
-            } else if(itemClass.isEnum()){
+            } else if (itemClass.isEnum()) {
                 Method enumNameMethod = itemClass.getMethod("valueOf", String.class);
                 ret = enumNameMethod.invoke(null, valueObject);
             } else {
@@ -1031,6 +1087,44 @@ public class ReincarnationHelper {
         if (!superClass.equals(Object.class)) {
             getAllFields(superClass, fieldList);
         }
+    }
+
+    private static boolean isInheritParcelable(String targetClassName) {
+        boolean ret = false;
+        Class targetClass = null;
+
+        try {
+            targetClass = Class.forName(targetClassName);
+            ret = isInheritParcelable(targetClass);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return ret;
+    }
+
+    private static boolean isInheritParcelable(Class targetClass) {
+        boolean ret = false;
+
+        Class[] interfaceClassArray = targetClass.getInterfaces();
+
+        if (interfaceClassArray != null && interfaceClassArray.length > 0) {
+            for (Class interfaceClass : interfaceClassArray) {
+                if (interfaceClass.equals(Parcelable.class)) {
+                    ret = true;
+                    break;
+                }
+            }
+        }
+
+        if (!ret) {
+            Class superClass = targetClass.getSuperclass();
+            if (superClass != null && !superClass.equals(Object.class)) {
+                ret = isInheritParcelable(superClass);
+            }
+        }
+
+        return ret;
     }
 
     private static class Parameter {
