@@ -26,7 +26,7 @@ repositories {
     maven { url 'http://raw.github.com/thcomp/Android_Reincarnation/master/repository' }
 }
 dependencies {
-    compile 'jp.co.thcomp:reincarnation:0.2.0'
+    compile 'jp.co.thcomp:reincarnation:{version}'
 }
 ```
 
