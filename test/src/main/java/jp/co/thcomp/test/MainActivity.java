@@ -26,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnStartTestB).setOnClickListener(mBtnClickListener);
         findViewById(R.id.btnStartTestB_All).setOnClickListener(mBtnClickListener);
         findViewById(R.id.btnStartTestC).setOnClickListener(mBtnClickListener);
+        findViewById(R.id.btnStartTestD).setOnClickListener(mBtnClickListener);
+        findViewById(R.id.btnStartTestD_All).setOnClickListener(mBtnClickListener);
         findViewById(R.id.btnStartTestUri).setOnClickListener(mBtnClickListener);
     }
 
@@ -115,6 +117,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void startTestD(){
+        Bundle outState = new Bundle();
+        RootDWrapper rootD = new RootDWrapper();
+        rootD.rootD = new RootD();
+        rootD.rootD.initialize();
+        ReincarnationHelper.save(rootD, outState);
+
+        RootDWrapper rootDNew = new RootDWrapper();
+        ReincarnationHelper.restore(rootDNew, outState);
+
+        if(rootD.rootD.equalsOnlyPublic(rootDNew.rootD)){
+            Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void startTestD_All(){
+        Bundle outState = new Bundle();
+        RootDWrapper rootD = new RootDWrapper();
+        rootD.rootD = new RootD();
+        rootD.rootD.initialize();
+        ReincarnationHelper.saveAll(rootD, outState);
+
+        RootDWrapper rootDNew = new RootDWrapper();
+        ReincarnationHelper.restoreAll(rootDNew, outState);
+
+        if(rootD.rootD.equals(rootDNew.rootD)){
+            Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "NG", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void startTestUri(){
         Bundle outState = new Bundle();
         UriWrapper uriWrapper = new UriWrapper();
@@ -157,11 +193,17 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.btnStartTestC:
                     startTestC();
                     break;
+                case R.id.btnStartTestD:
+                    startTestD();
+                    break;
                 case R.id.btnStartTestA_All:
                     startTestA_All();
                     break;
                 case R.id.btnStartTestB_All:
                     startTestB_All();
+                    break;
+                case R.id.btnStartTestD_All:
+                    startTestD_All();
                     break;
                 case R.id.btnStartTestUri:
                     startTestUri();
@@ -183,6 +225,11 @@ public class MainActivity extends AppCompatActivity {
     private static class RootCWrapper {
         @ReincarnationHelper.TargetField
         public RootC rootC;
+    }
+
+    private static class RootDWrapper {
+        @ReincarnationHelper.TargetField
+        public RootD rootD;
     }
 
     private static class UriWrapper {

@@ -23,6 +23,7 @@ import java.util.Map;
 public class ReincarnationHelper {
     private static final int NONE_ARRAY_FIELD_COUNT = -1;
     private static final int PARCELABLE_ARRAY_COUNT = -2;
+    private static final int NO_INSTANCE_COUNT = -3;
     private static final String ABSOLUTE_NAME_SEPARATER = ".";
     private static final String DATA_COUNT_NAME = ABSOLUTE_NAME_SEPARATER + "+DataCount+";
     private static final String KEY_NAME = ABSOLUTE_NAME_SEPARATER + "+Key+";
@@ -150,7 +151,7 @@ public class ReincarnationHelper {
                             int dataCount = getDataCount(fieldObject);
 
                             if (fieldObject == null) {
-                                // オブジェクトがnullなので保存するインスタンスがないので処理なし
+                                param.state.putInt(baseName + DATA_COUNT_NAME, NO_INSTANCE_COUNT);
                             } else {
                                 if (fieldObject instanceof String) {
                                     // 非配列のオブジェクトなので、dataCountとしてNONE_ARRAY_FIELD_COUNTを入れて置き、展開時に配列か否かの判断に使用
@@ -336,6 +337,8 @@ public class ReincarnationHelper {
                                 } else if (dataCount == PARCELABLE_ARRAY_COUNT) {
                                     // Parcelable[]なので、直接取得
                                     field.set(param.targetInstance, param.state.getParcelableArray(baseName));
+                                } else if (dataCount == NO_INSTANCE_COUNT) {
+                                    // save時にインスタンスがなかった場合なので、何もしない
                                 } else {
                                     String className = param.state.getString(baseName + CLASS_NAME);
 

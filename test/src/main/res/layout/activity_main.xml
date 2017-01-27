@@ -40,6 +40,18 @@
         android:text="start testC" />
 
     <Button
+        android:id="@+id/btnStartTestD"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="start testD" />
+
+    <Button
+        android:id="@+id/btnStartTestD_All"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="start testD All" />
+
+    <Button
         android:id="@+id/btnStartTestUri"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
